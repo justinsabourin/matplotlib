@@ -2613,6 +2613,14 @@ or tuple of floats
         autotexts = []
 
         i = 0
+        
+        prev_label = ''      # previous label
+        prev_xt = 0          # previous xt
+        prev_yt = 0          # previous yt
+        prev_alignment = 0   # previous label_alignment
+        
+        tight_labels = []    # list of labels that are overlapping
+        
         for frac, label, expl in zip(x, labels, explode):
             x, y = center
             theta2 = (theta1 + frac) if counterclock else (theta1 - frac)
@@ -2624,6 +2632,7 @@ or tuple of floats
                             360. * max(theta1, theta2),
                             facecolor=get_next_color(),
                             **wedgeprops)
+            
             slices.append(w)
             self.add_patch(w)
             w.set_label(label)
@@ -2640,14 +2649,92 @@ or tuple of floats
             xt = x + labeldistance * radius * math.cos(thetam)
             yt = y + labeldistance * radius * math.sin(thetam)
             label_alignment = xt > 0 and 'left' or 'right'
-
-            t = self.text(xt, yt, label,
-                          size=rcParams['xtick.labelsize'],
-                          horizontalalignment=label_alignment,
-                          verticalalignment='center',
-                          **textprops)
-
-            texts.append(t)
+            
+            # if distance between current label and prev_label too close,
+            # append prev_label to tight_labels
+            if (yt - prev_yt >= 0) and (yt - prev_yt <= 0.1):
+                tight_labels.append(str(labels[i-1]) + '\n')
+                
+                # if current label is the last label in labels,
+                # append current label to tight_labels and create text instance
+                # of all the labels in tight_labels
+                if label == labels[len(labels)-1]:
+                    tight_labels.append(str(label) + '\n')
+                    tight_label = ''.join(tight_labels)
+                    tight_labels.clear()
+                    t = self.text(prev_xt, prev_yt, tight_label,
+                                  size=rcParams['xtick.labelsize'],
+                                  horizontalalignment=prev_alignment,
+                                  verticalalignment='center',
+                                  multialignment='center',
+                                  **textprops)
+        
+                    texts.append(t)
+                    
+                prev_xt = xt
+                prev_yt = yt
+                prev_alignment = label_alignment
+            # elif distance between current label and prev_label is not tight,
+            # AND the prev_label is not empty, AND tight_labels is empty,
+            # THEN create text instance of prev_label.
+            elif (((yt - prev_yt < 0) or (yt - prev_yt > 0.1))
+                  and (len(prev_label) > 0)
+                  and (len(tight_labels) == 0)):
+                
+                # if current label is the last label in labels,
+                # create text instance of current label
+                if label == labels[len(labels)-1]:
+                    t = self.text(xt, yt, label,
+                                  size=rcParams['xtick.labelsize'],
+                                  horizontalalignment=label_alignment,
+                                  verticalalignment='center',
+                                  multialignment='center',
+                                  **textprops)
+        
+                    texts.append(t)
+                
+                # create text instance of prev_label
+                t = self.text(prev_xt, prev_yt, prev_label,
+                              size=rcParams['xtick.labelsize'],
+                              horizontalalignment=prev_alignment,
+                              verticalalignment='center',
+                              multialignment='center',
+                              **textprops)
+    
+                texts.append(t)
+                
+                prev_label = label
+                prev_xt = xt
+                prev_yt = yt
+                prev_alignment = label_alignment
+            # elif distance between current label and prev_label is not tight,
+            # AND tight_labels is not empty,
+            # THEN append prev_label to tight_labels and create text instance
+            # of all the labels in tight_labels
+            elif (((yt - prev_yt < 0) or (yt - prev_yt > 0.1))
+                  and (len(tight_labels) > 0)):
+                tight_labels.append(str(labels[i-1]) + '\n')
+                tight_label = ''.join(tight_labels)
+                tight_labels.clear()
+                t = self.text(prev_xt, prev_yt, tight_label,
+                              size=rcParams['xtick.labelsize'],
+                              horizontalalignment=prev_alignment,
+                              verticalalignment='center',
+                              multialignment='center',
+                              **textprops)
+    
+                texts.append(t)
+                
+                prev_label = label
+                prev_xt = xt
+                prev_yt = yt
+                prev_alignment = label_alignment
+            # else do nothing and just store the previous values
+            else:
+                prev_label = label
+                prev_xt = xt
+                prev_yt = yt
+                prev_alignment = label_alignment
 
             if autopct is not None:
                 xt = x + pctdistance * radius * math.cos(thetam)
@@ -2663,6 +2750,7 @@ or tuple of floats
                 t = self.text(xt, yt, s,
                               horizontalalignment='center',
                               verticalalignment='center',
+                              multialignment='center',
                               **textprops)
 
                 autotexts.append(t)
