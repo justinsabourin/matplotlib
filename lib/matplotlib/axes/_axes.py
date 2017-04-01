@@ -972,16 +972,6 @@ or tuple of floats
         if not iterable(xmax):
             xmax = [xmax]
 
-        # convert inf and -infs
-        xbottom, xtop = self.get_xbound()
-        minbottom = min([x for x in xmin if not np.isneginf(x)])
-        maxtop = max([x for x in xmax if not np.isinf(x)])
-        xtop = xtop if xtop > maxtop else maxtop
-        xbottom = xbottom if xbottom < minbottom else minbottom
-
-        xmax = [x if not np.isinf(x) else xtop for x in xmax]
-        xmin = [x if not np.isneginf(x) else xbottom for x in xmin]
-
         y, xmin, xmax = cbook.delete_masked_points(y, xmin, xmax)
 
         y = np.ravel(y)
@@ -1065,7 +1055,6 @@ or tuple of floats
             ymax = [ymax]
 
         x, ymin, ymax = cbook.delete_masked_points(x, ymin, ymax)
-
 
 
         x = np.ravel(x)
