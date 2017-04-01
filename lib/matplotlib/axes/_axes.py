@@ -972,6 +972,16 @@ or tuple of floats
         if not iterable(xmax):
             xmax = [xmax]
 
+        # convert inf and -infs
+        xbottom, xtop = self.get_xbound()
+        minbottom = min([x for x in xmin if not np.isneginf(x)])
+        maxtop = max([x for x in xmax if not np.isinf(x)])
+        xtop = xtop if xtop > maxtop else maxtop
+        xbottom = xbottom if xbottom < minbottom else minbottom
+
+        xmax = [x if not np.isinf(x) else xtop for x in xmax]
+        xmin = [x if not np.isneginf(x) else xbottom for x in xmin]
+
         y, xmin, xmax = cbook.delete_masked_points(y, xmin, xmax)
 
         y = np.ravel(y)
@@ -1056,12 +1066,15 @@ or tuple of floats
 
         x, ymin, ymax = cbook.delete_masked_points(x, ymin, ymax)
 
+
+
         x = np.ravel(x)
         ymin = np.resize(ymin, x.shape)
         ymax = np.resize(ymax, x.shape)
 
         verts = [((thisx, thisymin), (thisx, thisymax))
                  for thisx, thisymin, thisymax in zip(x, ymin, ymax)]
+
         #print 'creating line collection'
         lines = mcoll.LineCollection(verts, colors=colors,
                                      linestyles=linestyles, label=label)
@@ -1077,7 +1090,6 @@ or tuple of floats
             corners = (minx, miny), (maxx, maxy)
             self.update_datalim(corners)
             self.autoscale_view()
-
         return lines
 
     @_preprocess_data(replace_names=["positions", "lineoffsets",
@@ -2988,6 +3000,15 @@ or tuple of floats
             if noxlims.any():
                 yo, _ = xywhere(y, right, noxlims & everymask)
                 lo, ro = xywhere(left, right, noxlims & everymask)
+
+                xbottom, xtop = self.get_xbound()
+                minbottom = min([xo for xo in lo if np.isfinite(xo)] + [min(x)])
+                maxtop = max([xo for xo in ro if np.isfinite(xo)] + [max(x)])
+                xtop = xtop if xtop > maxtop else maxtop
+                xbottom = xbottom if xbottom < minbottom else minbottom
+                ro = [x if not np.isinf(x) else xtop for x in ro]
+                lo = [x if not np.isneginf(x) else xbottom for x in lo]
+
                 barcols.append(self.hlines(yo, lo, ro, **eb_lines_style))
                 if capsize > 0:
                     caplines.append(mlines.Line2D(lo, yo, marker='|',
@@ -3037,7 +3058,18 @@ or tuple of floats
             if noylims.any():
                 xo, _ = xywhere(x, lower, noylims & everymask)
                 lo, uo = xywhere(lower, upper, noylims & everymask)
+
+                # convert inf and -infs
+                ybottom, ytop = self.get_ybound()
+                minbottom = min([yo for yo in lo if np.isfinite(yo)] + [min(y)])
+                maxtop = max([yo for yo in uo if np.isfinite(yo)] + [max(y)])
+                ytop = ytop if ytop > maxtop else maxtop
+                ybottom = ybottom if ybottom < minbottom else minbottom
+                uo = [y if not np.isinf(y) else ytop for y in uo]
+                lo = [y if not np.isneginf(y) else ybottom for y in lo]
+
                 barcols.append(self.vlines(xo, lo, uo, **eb_lines_style))
+
                 if capsize > 0:
                     caplines.append(mlines.Line2D(xo, lo, marker='_',
                                                   **eb_cap_style))
@@ -3089,7 +3121,6 @@ or tuple of floats
                                                has_yerr=(yerr is not None),
                                                label=label)
         self.containers.append(errorbar_container)
-
         return errorbar_container  # (l0, caplines, barcols)
 
     @_preprocess_data(label_namer=None)

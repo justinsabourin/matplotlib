@@ -2581,6 +2581,105 @@ def test_errobar_nonefmt():
         assert np.all(errbar.get_color() == mcolors.to_rgba('C0'))
 
 
+@image_comparison(baseline_images=['errorbar_nan'])
+def test_errorbar_nan():
+    # Check that errorbars with np.nan values are plotted correctly
+    x1 = np.arange(0.1, 4, 0.5)
+    y1 = np.exp(-x1)
+
+    x2 = np.arange(10)
+    y2 = x2
+
+    err = np.array([2.0] * 10)
+    err[0] = np.nan
+    err[5] = np.nan
+    err[9] = np.nan
+
+    fig, axs = plt.subplots(nrows=3, ncols=2, sharex='col', sharey='col')
+    fig.subplots_adjust(wspace=0.3, hspace=1)
+
+    # basic errorbar, nan in x, 0.4 in y
+    ax = axs[0, 0]
+    ax.errorbar(x1, y1, xerr=np.nan, yerr=0.4)
+    ax.set_title("nan in x, 0.4 in y")
+    ax.locator_params(nbins=6)
+
+    # basic errorbar, 0.2 in x, nan in y
+    ax = axs[1, 0]
+    ax.errorbar(x1, y1, xerr=0.2, yerr=np.nan)
+    ax.set_title("0.2 in x, nan in y")
+
+    # basic errorbar, nan in x, nan in y
+    ax = axs[2, 0]
+    ax.errorbar(x1, y1, xerr=np.nan, yerr=np.nan)
+    ax.set_title("nan in x, nan in y")
+
+    # linear plot with errorbars, nan in x on specific points
+    ax = axs[0, 1]
+    ax.errorbar(x2, y2, xerr=err)
+    ax.set_title("nan in x on specific points")
+
+    # linear plot with errorbars, nan in y on specific points
+    ax = axs[1, 1]
+    ax.errorbar(x2, y2, yerr=err)
+    ax.set_title("nan in y on specific points")
+
+    # linear plot with errorbars, nan in x,y on specific points
+    ax = axs[2, 1]
+    ax.errorbar(x2, y2, xerr=err, yerr=err)
+    ax.set_title("nan in x,y on specific points")
+    fig.suptitle("Plotting errorbars with np.nan error")
+
+@image_comparison(baseline_images=['errorbar_inf'])
+def test_errorbar_inf():
+    # Check that errorbars with np.nan values are plotted correctly
+    x1 = np.arange(0.1, 4, 0.5)
+    y1 = np.exp(-x1)
+
+    x2 = np.arange(10)
+    y2 = x2
+
+    err = np.array([2.0] * 10)
+    err[0] = np.inf
+    err[5] = np.inf
+    err[9] = np.inf
+
+    fig, axs = plt.subplots(nrows=3, ncols=2, sharex='col', sharey='col')
+    fig.subplots_adjust(wspace=0.3, hspace=1)
+
+    # basic errorbar, inf in x, 0.4 in y
+    ax = axs[0, 0]
+    ax.errorbar(x1, y1, xerr=np.inf, yerr=0.4)
+    ax.set_title("inf in x, 0.4 in y")
+    ax.locator_params(nbins=6)
+
+    # basic errorbar, 0.2 in x, inf in y
+    ax = axs[1, 0]
+    ax.errorbar(x1, y1, xerr=0.2, yerr=np.inf)
+    ax.set_title("0.2 in x, inf in y")
+
+    # basic errorbar, inf in x, inf in y
+    ax = axs[2, 0]
+    ax.errorbar(x1, y1, xerr=np.inf, yerr=np.inf)
+    ax.set_title("inf in x, inf in y")
+
+    # linear plot with errorbars, inf in x on specific points
+    ax = axs[0, 1]
+    ax.errorbar(x2, y2, xerr=err)
+    ax.set_title("inf in x on specific points")
+
+    # linear plot with errorbars, inf in y on specific points
+    ax = axs[1, 1]
+    ax.errorbar(x2, y2, yerr=err)
+    ax.set_title("inf in y on specific points")
+
+    # linear plot with errorbars, inf in x,y on specific points
+    ax = axs[2, 1]
+    ax.errorbar(x2, y2, xerr=err, yerr=err)
+    ax.set_title("inf in x,y on specific points")
+    fig.suptitle("Plotting errorbars with np.inf error")
+
+
 @image_comparison(baseline_images=['hist_stacked_stepfilled',
                                    'hist_stacked_stepfilled'])
 def test_hist_stacked_stepfilled():
